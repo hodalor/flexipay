@@ -12,6 +12,7 @@ import { useDevices } from '@hooks/useDevices';
 import { useLoans } from '@hooks/useLoans';
 import { hasAction } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
+import { metricGridStyle } from '@/styles/layout';
 
 function formatCurrency(value) {
   return 'ZMW ' + (Number(value || 0) / 100).toFixed(2);
@@ -279,9 +280,7 @@ const styles = {
     gap: '18px'
   },
   metrics: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(180px, 240px))',
-    gap: '12px'
+    ...metricGridStyle
   },
   cancelButton: {
     border: 0,

@@ -33,34 +33,36 @@ export default function DataTable({ columns, rows }) {
 
   return (
     <div style={styles.wrapper}>
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            {columns.map(function renderHead(column) {
-              return (
-                <th key={column.key} style={styles.head} onClick={() => handleSort(column.key)}>
-                  {column.label}
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedRows.length ? sortedRows.map(function renderRow(row) {
-            return (
-              <tr key={row.id} style={styles.row}>
-                {columns.map(function renderCell(column) {
-                  return <td key={column.key} style={styles.cell}>{column.render ? column.render(row) : row[column.key]}</td>;
-                })}
-              </tr>
-            );
-          }) : (
+      <div style={styles.scroller}>
+        <table style={styles.table}>
+          <thead>
             <tr>
-              <td colSpan={columns.length} style={styles.emptyCell}>No records yet. Create the first one from the action button.</td>
+              {columns.map(function renderHead(column) {
+                return (
+                  <th key={column.key} style={styles.head} onClick={() => handleSort(column.key)}>
+                    {column.label}
+                  </th>
+                );
+              })}
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedRows.length ? sortedRows.map(function renderRow(row) {
+              return (
+                <tr key={row.id} style={styles.row}>
+                  {columns.map(function renderCell(column) {
+                    return <td key={column.key} style={styles.cell}>{column.render ? column.render(row) : row[column.key]}</td>;
+                  })}
+                </tr>
+              );
+            }) : (
+              <tr>
+                <td colSpan={columns.length} style={styles.emptyCell}>No records yet. Create the first one from the action button.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -68,14 +70,23 @@ export default function DataTable({ columns, rows }) {
 const styles = {
   wrapper: {
     width: '100%',
-    overflowX: 'auto',
+    minWidth: 0,
+    maxWidth: '100%',
+    overflow: 'hidden',
     background: 'rgba(15, 23, 42, 0.72)',
     borderRadius: '22px',
     border: '1px solid rgba(148, 163, 184, 0.12)',
     boxShadow: '0 24px 60px rgba(2, 6, 23, 0.22)'
   },
-  table: {
+  scroller: {
     width: '100%',
+    maxWidth: '100%',
+    overflowX: 'auto',
+    overflowY: 'hidden'
+  },
+  table: {
+    width: 'max-content',
+    minWidth: '100%',
     borderCollapse: 'collapse'
   },
   head: {
@@ -97,7 +108,8 @@ const styles = {
     padding: '16px 18px',
     borderTop: '1px solid rgba(148, 163, 184, 0.1)',
     color: '#e2e8f0',
-    verticalAlign: 'top'
+    verticalAlign: 'top',
+    overflowWrap: 'anywhere'
   },
   emptyCell: {
     padding: '26px 18px',

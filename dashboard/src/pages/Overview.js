@@ -18,6 +18,7 @@ import KPICard from '@components/KPICard';
 import PageHeader from '@components/PageHeader';
 import { useDevices } from '@hooks/useDevices';
 import { useLoans } from '@hooks/useLoans';
+import { metricGridStyle } from '@/styles/layout';
 
 function monthKey(dateValue) {
   const date = new Date(dateValue);
@@ -213,9 +214,7 @@ const styles = {
     gap: '18px'
   },
   grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(180px, 240px))',
-    gap: '12px',
+    ...metricGridStyle,
     marginBottom: '16px'
   },
   chartsGrid: {

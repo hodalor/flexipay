@@ -12,6 +12,7 @@ import { useCustomers } from '@hooks/useCustomers';
 import { useDevices } from '@hooks/useDevices';
 import { hasAction } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
+import { metricGridStyle } from '@/styles/layout';
 
 function deriveStatus(device) {
   const lastSeen = device.lastSeen ? new Date(device.lastSeen).getTime() : 0;
@@ -313,9 +314,7 @@ const styles = {
     gap: '18px'
   },
   metrics: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(180px, 240px))',
-    gap: '12px'
+    ...metricGridStyle
   },
   button: {
     background: '#0f766e',

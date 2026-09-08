@@ -1,6 +1,7 @@
 import React from 'react';
 import KPICard from '@components/KPICard';
 import PageHeader from '@components/PageHeader';
+import { metricGridStyle } from '@/styles/layout';
 
 export default function Settings() {
   return (
@@ -49,9 +50,7 @@ const styles = {
     gap: '18px'
   },
   metrics: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(180px, 240px))',
-    gap: '12px'
+    ...metricGridStyle
   },
   grid: {
     display: 'grid',

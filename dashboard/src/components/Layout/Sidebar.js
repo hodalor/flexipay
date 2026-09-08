@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { hasAction, hasMenu } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
+import { DASHBOARD_LAYOUT } from '@/styles/layout';
 
 const sections = [
   {
@@ -118,7 +119,7 @@ export default function Sidebar() {
     <aside style={styles.sidebar}>
       <div style={styles.brandBlock}>
         <div style={styles.brand}>FlexiPay</div>
-        <div style={styles.brandCaption}>AI-powered finance operations</div>
+        <div style={styles.brandCaption}>SECURE FINANCE</div>
       </div>
       <style>{`
         .flexipay-sidebar-scroll {
@@ -210,8 +211,9 @@ const styles = {
     top: 0,
     left: 0,
     bottom: 0,
-    width: '208px',
-    padding: '22px 14px 18px',
+    width: DASHBOARD_LAYOUT.sidebarWidth,
+    boxSizing: 'border-box',
+    padding: '18px 10px 14px',
     background: 'linear-gradient(180deg, rgba(2, 6, 23, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
     borderRight: '1px solid rgba(148, 163, 184, 0.1)',
     display: 'flex',
@@ -220,12 +222,12 @@ const styles = {
     zIndex: 100
   },
   brandBlock: {
-    padding: '8px 10px 4px'
+    padding: '8px 8px 4px'
   },
   brand: {
     color: '#99f6e4',
     fontWeight: '700',
-    fontSize: '24px',
+    fontSize: '22px',
     letterSpacing: '-0.03em'
   },
   brandCaption: {
@@ -243,7 +245,7 @@ const styles = {
     paddingRight: '2px'
   },
   flatLink: {
-    padding: '12px 14px',
+    padding: '11px 12px',
     borderRadius: '14px',
     textDecoration: 'none',
     border: '1px solid transparent',
@@ -257,7 +259,7 @@ const styles = {
   },
   groupButton: {
     width: '100%',
-    padding: '12px 14px',
+    padding: '11px 12px',
     borderRadius: '14px',
     border: '1px solid transparent',
     background: 'transparent',
@@ -282,8 +284,8 @@ const styles = {
     gap: '8px'
   },
   link: {
-    marginLeft: '10px',
-    padding: '10px 14px',
+    marginLeft: '8px',
+    padding: '10px 12px',
     borderRadius: '14px',
     textDecoration: 'none',
     border: '1px solid transparent',

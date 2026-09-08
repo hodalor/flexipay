@@ -22,6 +22,13 @@
 - Launch app: `yarn start`
 - Build local bundles: `yarn bundle`
 - Package for distribution: `yarn make`
+- Build the Windows installer only: `yarn make:win`
+
+## Windows Installer Output
+
+- Electron Forge builds the Windows package as `FlexiPayDesktop.exe`.
+- The Squirrel installer output is named `FlexiPayDesktopSetup.exe`.
+- Generated artifacts are written under `desktop/out/make`.
 
 ## Platform Notes
 

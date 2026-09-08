@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCustomers } from '@hooks/useCustomers';
 import { hasAction } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
+import { metricGridStyle } from '@/styles/layout';
 
 export default function Customers() {
   const { user } = useAuth();
@@ -186,9 +187,7 @@ const styles = {
     gap: '18px'
   },
   metrics: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(180px, 240px))',
-    gap: '12px'
+    ...metricGridStyle
   },
   toolbar: {
     display: 'flex',

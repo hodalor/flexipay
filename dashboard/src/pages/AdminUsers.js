@@ -15,6 +15,7 @@ import {
   hasAction
 } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
+import { metricGridStyle } from '@/styles/layout';
 
 function emptyForm() {
   return {
@@ -328,9 +329,7 @@ const styles = {
     gap: '18px'
   },
   metrics: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(180px, 240px))',
-    gap: '12px'
+    ...metricGridStyle
   },
   editButton: {
     border: 0,

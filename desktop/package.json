@@ -1,6 +1,8 @@
 {
   "name": "@flexipay/desktop",
+  "productName": "FlexiPay Desktop Agent",
   "version": "1.0.0",
+  "description": "FlexiPay desktop agent for heartbeat, enrollment, and device enforcement.",
   "private": true,
   "main": "src/main/index.js",
   "scripts": {
@@ -8,7 +10,8 @@
     "bundle:main": "webpack --config webpack.main.js",
     "bundle:renderer": "webpack --config webpack.renderer.js",
     "bundle": "yarn bundle:main && yarn bundle:renderer",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "make:win": "electron-forge make --platform win32"
   },
   "_moduleAliases": {
     "@main": "src/main",
@@ -43,4 +46,3 @@
     "webpack-cli": "^5.1.4"
   }
 }
-

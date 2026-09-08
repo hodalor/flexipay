@@ -15,6 +15,7 @@ import Settings from '@pages/Settings';
 import { useAuth } from '@hooks/useAuth';
 import { useRealtimeEvents } from '@hooks/useRealtimeEvents';
 import { hasMenu } from '@/constants/access';
+import { DASHBOARD_LAYOUT } from '@/styles/layout';
 
 function firstAccessibleRoute(user) {
   if (hasMenu(user, 'overview')) {
@@ -60,21 +61,23 @@ function Shell({ user }) {
       <div style={styles.main}>
         <Topbar />
         <div style={styles.content}>
-          <Routes>
-            <Route path="/" element={<MenuRoute user={user} menuKey="overview" element={<Overview />} />} />
-            <Route path="/customers" element={<MenuRoute user={user} menuKey="customers" element={<Customers />} />} />
-            <Route path="/customers/:id" element={<MenuRoute user={user} menuKey="customers" element={<CustomerDetail />} />} />
-            <Route path="/devices" element={<MenuRoute user={user} menuKey="devices" element={<Devices />} />} />
-            <Route path="/loans" element={<MenuRoute user={user} menuKey="loans" element={<Loans />} />} />
-            <Route path="/payments" element={<Navigate to="/repayments/recording" replace />} />
-            <Route path="/repayments" element={<Navigate to="/repayments/recording" replace />} />
-            <Route path="/repayments/recording" element={<MenuRoute user={user} menuKey="repayments" element={<Payments />} />} />
-            <Route path="/repayments/approvals" element={<MenuRoute user={user} menuKey="repayments" element={<RepaymentApprovals />} />} />
-            <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
-            <Route path="/admin/users" element={<MenuRoute user={user} menuKey="admin" element={<AdminUsers />} />} />
-            <Route path="/settings" element={<MenuRoute user={user} menuKey="settings" element={<Settings />} />} />
-            <Route path="*" element={<Navigate to={firstAccessibleRoute(user)} replace />} />
-          </Routes>
+          <div style={styles.contentInner}>
+            <Routes>
+              <Route path="/" element={<MenuRoute user={user} menuKey="overview" element={<Overview />} />} />
+              <Route path="/customers" element={<MenuRoute user={user} menuKey="customers" element={<Customers />} />} />
+              <Route path="/customers/:id" element={<MenuRoute user={user} menuKey="customers" element={<CustomerDetail />} />} />
+              <Route path="/devices" element={<MenuRoute user={user} menuKey="devices" element={<Devices />} />} />
+              <Route path="/loans" element={<MenuRoute user={user} menuKey="loans" element={<Loans />} />} />
+              <Route path="/payments" element={<Navigate to="/repayments/recording" replace />} />
+              <Route path="/repayments" element={<Navigate to="/repayments/recording" replace />} />
+              <Route path="/repayments/recording" element={<MenuRoute user={user} menuKey="repayments" element={<Payments />} />} />
+              <Route path="/repayments/approvals" element={<MenuRoute user={user} menuKey="repayments" element={<RepaymentApprovals />} />} />
+              <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
+              <Route path="/admin/users" element={<MenuRoute user={user} menuKey="admin" element={<AdminUsers />} />} />
+              <Route path="/settings" element={<MenuRoute user={user} menuKey="settings" element={<Settings />} />} />
+              <Route path="*" element={<Navigate to={firstAccessibleRoute(user)} replace />} />
+            </Routes>
+          </div>
         </div>
       </div>
     </div>
@@ -94,19 +97,31 @@ export default function App() {
 
 const styles = {
   shell: {
-    minHeight: '100vh',
+    height: '100vh',
+    overflow: 'hidden',
     background: 'radial-gradient(circle at top, #1e293b 0%, #0f172a 55%, #020617 100%)',
     color: '#e2e8f0'
   },
   main: {
-    marginLeft: '208px',
-    minHeight: '100vh',
+    marginLeft: DASHBOARD_LAYOUT.sidebarWidth,
+    width: `calc(100vw - ${DASHBOARD_LAYOUT.sidebarWidth})`,
+    height: '100vh',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    overflow: 'hidden'
   },
   content: {
     flex: 1,
-    padding: '68px 18px 18px',
-    maxWidth: '1600px'
+    width: '100%',
+    boxSizing: 'border-box',
+    minWidth: 0,
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    padding: '14px 18px 18px'
+  },
+  contentInner: {
+    width: '100%',
+    maxWidth: DASHBOARD_LAYOUT.contentMaxWidth,
+    minWidth: 0
   }
 };

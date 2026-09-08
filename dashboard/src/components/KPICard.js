@@ -11,6 +11,8 @@ export default function KPICard({ label, value, accent }) {
 
 const styles = {
   card: {
+    width: '100%',
+    boxSizing: 'border-box',
     background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.72) 100%)',
     borderRadius: '16px',
     padding: '12px 14px',
