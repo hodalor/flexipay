@@ -46,11 +46,11 @@ export default function Topbar() {
   return (
     <header style={styles.header}>
       <div style={styles.brandingWrap}>
-        <div style={styles.kicker}>Operations Center</div>
         <div style={styles.brandRow}>
           {branding.logoDataUrl ? <img src={branding.logoDataUrl} alt={branding.companyName} style={styles.logo} /> : null}
           <div style={styles.title}>{branding.companyName || 'FlexiPay'}</div>
         </div>
+        <div style={styles.kicker}>{branding.tagline || 'Operations Center'}</div>
       </div>
       <div style={styles.rightRail}>
         <div style={styles.syncBadge}>Live sync active</div>
@@ -102,7 +102,7 @@ const styles = {
     backdropFilter: 'blur(18px)'
   },
   kicker: {
-    color: '#14b8a6',
+    color: '#ffffff',
     fontSize: '11px',
     textTransform: 'uppercase',
     letterSpacing: '0.12em',
@@ -128,7 +128,7 @@ const styles = {
   title: {
     fontSize: '22px',
     fontWeight: '700',
-    color: '#f8fafc',
+    color: '#22c55e',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis'

@@ -4,6 +4,7 @@ const STORAGE_KEY = 'flexipay.dashboard.branding';
 
 const defaultBranding = {
   companyName: 'FlexiPay',
+  tagline: 'Operations Center',
   phone: '',
   email: '',
   address: '',

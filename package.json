@@ -1,0 +1,14 @@
+{
+  "name": "flexipay",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "npm run test:backend && npm run test:dashboard && npm run test:desktop && npm run test:mobile",
+    "test:backend": "npm test --prefix backend",
+    "test:dashboard": "npm test --prefix dashboard",
+    "test:desktop": "npm test --prefix desktop",
+    "test:mobile": "npm test --prefix mobile",
+    "build:dashboard": "npm run build --prefix dashboard",
+    "build:desktop": "npm run bundle --prefix desktop"
+  }
+}

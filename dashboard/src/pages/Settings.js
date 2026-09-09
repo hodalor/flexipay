@@ -55,6 +55,7 @@ export default function Settings() {
 
     saveBrandingConfig({
       companyName: brandingForm.companyName.trim(),
+      tagline: (brandingForm.tagline || '').trim(),
       phone: brandingForm.phone.trim(),
       email: brandingForm.email.trim(),
       address: brandingForm.address.trim(),
@@ -103,6 +104,10 @@ export default function Settings() {
                 <input style={styles.input} value={brandingForm.companyName} onChange={(event) => updateField('companyName', event.target.value)} />
               </div>
               <div style={styles.field}>
+                <label style={styles.label}>Tagline</label>
+                <input style={styles.input} value={brandingForm.tagline || ''} onChange={(event) => updateField('tagline', event.target.value)} />
+              </div>
+              <div style={styles.field}>
                 <label style={styles.label}>Phone</label>
                 <input style={styles.input} value={brandingForm.phone} onChange={(event) => updateField('phone', event.target.value)} />
               </div>
@@ -126,6 +131,7 @@ export default function Settings() {
             <div style={styles.previewCard}>
               {brandingForm.logoDataUrl ? <img src={brandingForm.logoDataUrl} alt={brandingForm.companyName} style={styles.previewLogo} /> : <div style={styles.previewLogoFallback}>No logo</div>}
               <div style={styles.previewName}>{brandingForm.companyName || 'FlexiPay'}</div>
+              <div style={styles.previewTagline}>{brandingForm.tagline || 'Operations Center'}</div>
               <div style={styles.previewMeta}>{brandingForm.email || 'Email not set'}</div>
               <div style={styles.previewMeta}>{brandingForm.phone || 'Phone not set'}</div>
               <div style={styles.previewMeta}>{brandingForm.address || 'Address not set'}</div>
@@ -269,9 +275,16 @@ const styles = {
     fontSize: '12px'
   },
   previewName: {
-    color: '#f8fafc',
+    color: '#22c55e',
     fontWeight: '700',
     fontSize: '22px'
+  },
+  previewTagline: {
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    letterSpacing: '0.12em',
+    fontSize: '11px',
+    fontWeight: '700'
   },
   previewMeta: {
     color: '#94a3b8',
