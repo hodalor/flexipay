@@ -34,6 +34,38 @@ function deriveStatus(device) {
   return 'active';
 }
 
+function looksLikeFallbackIdentifier(value) {
+  const normalized = String(value || '').trim();
+
+  if (!normalized) {
+    return false;
+  }
+
+  return normalized.startsWith('FXP-DESKTOP-')
+    || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized);
+}
+
+function resolveIdentifier(device) {
+  if (device.imei) {
+    return {
+      label: 'IMEI',
+      value: device.imei
+    };
+  }
+
+  if (device.serialNumber) {
+    return {
+      label: looksLikeFallbackIdentifier(device.serialNumber) ? 'Fallback Device ID' : 'Hardware Serial',
+      value: device.serialNumber
+    };
+  }
+
+  return {
+    label: 'Unavailable',
+    value: 'Not captured'
+  };
+}
+
 export default function Devices() {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -123,13 +155,14 @@ export default function Devices() {
   const rows = useMemo(() => {
     return (devicesQuery.data || []).map(function toRow(device) {
       const status = deriveStatus(device);
+      const identifier = resolveIdentifier(device);
       return {
         id: device.id,
         customerId: device.customerId,
         customerName: device.customerName || 'Unknown customer',
         deviceType: device.type,
         deviceModel: device.brand + ' ' + device.model,
-        identifier: device.imei || device.serialNumber,
+        identifier,
         loanStatus: device.loanStatus,
         status,
         lastSeen: device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'Never',
@@ -220,7 +253,16 @@ export default function Devices() {
           { key: 'customerName', label: 'Customer' },
           { key: 'deviceType', label: 'Device Type' },
           { key: 'deviceModel', label: 'Model' },
-          { key: 'identifier', label: 'IMEI / Serial' },
+          {
+            key: 'identifier',
+            label: 'Device Identifier',
+            render: (row) => (
+              <div style={styles.identifierCell}>
+                <div style={styles.identifierValue}>{row.identifier.value}</div>
+                <div style={styles.identifierLabel}>{row.identifier.label}</div>
+              </div>
+            )
+          },
           { key: 'loanStatus', label: 'Loan Status' },
           { key: 'status', label: 'Status', render: (row) => <DeviceStatusBadge status={row.status} /> },
           { key: 'lastSeen', label: 'Last Seen' },
@@ -345,6 +387,20 @@ const styles = {
     gap: '8px',
     alignItems: 'center',
     color: '#cbd5e1'
+  },
+  identifierCell: {
+    display: 'grid',
+    gap: '4px'
+  },
+  identifierValue: {
+    color: '#f8fafc',
+    fontWeight: '600'
+  },
+  identifierLabel: {
+    color: '#94a3b8',
+    fontSize: '12px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em'
   },
   actions: {
     display: 'flex',

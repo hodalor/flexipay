@@ -7,6 +7,29 @@ function formatCurrency(value) {
   return 'ZMW ' + (Number(value || 0) / 100).toFixed(2);
 }
 
+function looksLikeFallbackIdentifier(value) {
+  const normalized = String(value || '').trim();
+
+  if (!normalized) {
+    return false;
+  }
+
+  return normalized.startsWith('FXP-DESKTOP-')
+    || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized);
+}
+
+function formatDeviceIdentifier(device) {
+  if (device.imei) {
+    return 'IMEI: ' + device.imei;
+  }
+
+  if (device.serialNumber) {
+    return (looksLikeFallbackIdentifier(device.serialNumber) ? 'Fallback Device ID: ' : 'Hardware Serial: ') + device.serialNumber;
+  }
+
+  return 'Identifier unavailable';
+}
+
 export default function CustomerDetail() {
   const { id } = useParams();
   const query = useQuery({
@@ -39,7 +62,7 @@ export default function CustomerDetail() {
         <h3>Devices</h3>
         {(customer.devices || []).map((device) => (
           <div key={device.id} style={styles.item}>
-            {device.brand + ' ' + device.model} | {device.type} | {device.isLocked ? 'Locked' : 'Active'}
+            {device.brand + ' ' + device.model} | {device.type} | {device.isLocked ? 'Locked' : 'Active'} | {formatDeviceIdentifier(device)}
           </div>
         ))}
       </div>

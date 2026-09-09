@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 const Store = require('electron-store');
 const logger = require('@main/logger');
+const { resolveHardwareSerialNumber } = require('@main/device.identity');
 
 const store = new Store({
   name: 'flexipay-desktop'
@@ -47,6 +48,7 @@ function getEnrollmentState() {
     isEnrolled: Boolean(store.get('deviceId') && store.get('deviceToken')),
     backendUrl: normalizeBackendUrl(store.get('backendUrl')),
     deviceId: store.get('deviceId') || null,
+    serialNumber: store.get('serialNumber') || null,
     installationId: getInstallationId(),
     platformType: getPlatformType(),
     deviceName: getModelName(),
@@ -63,13 +65,15 @@ async function enrollDesktopDevice(payload) {
     });
     const session = loginResponse.data.data;
     const installationId = getInstallationId();
+    const detectedSerialNumber = await resolveHardwareSerialNumber();
+    const serialNumber = payload.serialNumber || detectedSerialNumber || installationId;
 
     const enrollResponse = await axios.post(backendUrl + '/devices/enroll', {
       customerId: session.customer.id,
       type: getPlatformType(),
       brand: payload.brand || getBrandName(),
       model: payload.model || getModelName(),
-      serialNumber: installationId,
+      serialNumber,
       mdmEnrollmentId: installationId
     }, {
       headers: {
@@ -81,6 +85,7 @@ async function enrollDesktopDevice(payload) {
     store.set('backendUrl', backendUrl);
     store.set('deviceId', enrollment.device.id);
     store.set('deviceToken', enrollment.deviceToken);
+    store.set('serialNumber', enrollment.device.serialNumber || serialNumber);
     store.set('customerProfile', {
       id: session.customer.id,
       fullName: session.customer.fullName,
@@ -94,7 +99,8 @@ async function enrollDesktopDevice(payload) {
 
     logger.info('Desktop device enrolled successfully', {
       deviceId: enrollment.device.id,
-      customerId: session.customer.id
+      customerId: session.customer.id,
+      serialNumber
     });
 
     return {
