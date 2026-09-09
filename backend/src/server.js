@@ -16,8 +16,8 @@ const port = Number(process.env.PORT || 4000);
 async function bootstrap() {
   try {
     await sequelize.authenticate();
-    await sequelize.sync();
-    logger.info('Database connection established');
+    await sequelize.sync({ alter: true });
+    logger.info('Database connection established and schema synchronized');
     await connectRedis();
     startScheduler();
 
