@@ -4,6 +4,7 @@ const {
   normalizeAmountInt,
   formatAmount
 } = require('../src/utils/money');
+const { formatDeviceCode } = require('../src/utils/device-code');
 
 describe('money utils', () => {
   test('converts decimal values to ngwee integers', () => {
@@ -20,5 +21,15 @@ describe('money utils', () => {
     expect(normalizeAmountInt('123.8')).toBe(124);
     expect(normalizeAmountInt(null)).toBe(0);
     expect(formatAmount(505)).toBe('5.05');
+  });
+});
+
+describe('device code utils', () => {
+  test('formats short human device IDs by platform prefix', () => {
+    expect(formatDeviceCode('windows', 1)).toBe('WIN0000001');
+    expect(formatDeviceCode('mac', 1)).toBe('MAC0000001');
+    expect(formatDeviceCode('android', 1)).toBe('AND0000001');
+    expect(formatDeviceCode('ios', 1)).toBe('IOS0000001');
+    expect(formatDeviceCode('linux', 1)).toBe('LNX0000001');
   });
 });

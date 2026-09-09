@@ -12,8 +12,13 @@ module.exports = function DeviceModel(sequelize) {
       allowNull: false
     },
     type: {
-      type: DataTypes.ENUM('android', 'ios', 'windows', 'mac', 'car'),
+      type: DataTypes.ENUM('android', 'ios', 'windows', 'mac', 'linux', 'car'),
       allowNull: false
+    },
+    deviceCode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
     },
     brand: {
       type: DataTypes.STRING,
@@ -25,7 +30,7 @@ module.exports = function DeviceModel(sequelize) {
     },
     serialNumber: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       unique: true
     },
     imei: {

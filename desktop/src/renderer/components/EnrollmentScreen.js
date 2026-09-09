@@ -5,8 +5,9 @@ export default function EnrollmentScreen({ enrollment, onComplete }) {
     identifier: '',
     password: '',
     backendUrl: enrollment?.backendUrl || 'http://localhost:4000/api',
-    brand: enrollment?.platformType === 'mac' ? 'Apple' : 'Windows PC',
-    model: enrollment?.deviceName || ''
+    brand: enrollment?.platformType === 'mac' ? 'Apple' : enrollment?.platformType === 'linux' ? 'Linux PC' : 'Windows PC',
+    model: enrollment?.deviceName || '',
+    serialNumber: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -88,6 +89,9 @@ export default function EnrollmentScreen({ enrollment, onComplete }) {
               <input style={styles.input} value={form.model} onChange={(event) => updateField('model', event.target.value)} />
             </div>
           </div>
+
+          <label style={styles.label}>Manual serial override</label>
+          <input style={styles.input} value={form.serialNumber} onChange={(event) => updateField('serialNumber', event.target.value)} placeholder="Optional if hardware serial cannot be read" />
 
           {error ? <div style={styles.error}>{error}</div> : null}
 

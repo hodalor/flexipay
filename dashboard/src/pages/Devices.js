@@ -7,7 +7,7 @@ import DataTable from '@components/DataTable';
 import DeviceStatusBadge from '@components/DeviceStatusBadge';
 import KPICard from '@components/KPICard';
 import PageHeader from '@components/PageHeader';
-import { enrollDevice, lockDevice, unlockDevice } from '@api';
+import { enrollDevice, lockDevice, unlockDevice, updateDevice } from '@api';
 import { useCustomers } from '@hooks/useCustomers';
 import { useDevices } from '@hooks/useDevices';
 import { hasAction } from '@/constants/access';
@@ -62,7 +62,7 @@ function resolveIdentifier(device) {
 
   return {
     label: 'Unavailable',
-    value: 'Not captured'
+    value: '-'
   };
 }
 
@@ -77,6 +77,7 @@ export default function Devices() {
   const devicesQuery = useDevices();
   const customersQuery = useCustomers();
   const [pendingAction, setPendingAction] = useState(null);
+  const [editingDevice, setEditingDevice] = useState(null);
   const [filters, setFilters] = useState({
     status: 'all',
     type: 'all',
@@ -84,9 +85,16 @@ export default function Devices() {
   });
   const [isEnrollOpen, setIsEnrollOpen] = useState(false);
   const [enrollError, setEnrollError] = useState('');
+  const [editError, setEditError] = useState('');
   const [form, setForm] = useState({
     customerId: '',
     type: 'android',
+    brand: '',
+    model: '',
+    serialNumber: '',
+    imei: ''
+  });
+  const [editForm, setEditForm] = useState({
     brand: '',
     model: '',
     serialNumber: '',
@@ -152,12 +160,36 @@ export default function Devices() {
     }
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }) => updateDevice(id, payload),
+    onSuccess: () => {
+      setEditError('');
+      setEditingDevice(null);
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      showToast({
+        type: 'success',
+        title: 'Device updated',
+        message: 'Manual identifier changes were saved successfully.'
+      });
+    },
+    onError: (error) => {
+      setEditError(error.response?.data?.message || 'Unable to update device.');
+      showToast({
+        type: 'error',
+        title: 'Update failed',
+        message: error.response?.data?.message || 'Unable to update device.'
+      });
+    }
+  });
+
   const rows = useMemo(() => {
     return (devicesQuery.data || []).map(function toRow(device) {
       const status = deriveStatus(device);
       const identifier = resolveIdentifier(device);
       return {
         id: device.id,
+        deviceCode: device.deviceCode || '-',
         customerId: device.customerId,
         customerName: device.customerName || 'Unknown customer',
         deviceType: device.type,
@@ -194,12 +226,53 @@ export default function Devices() {
   function handleEnroll() {
     setEnrollError('');
 
-    if (!form.customerId || !form.type || !form.brand || !form.model || !form.serialNumber) {
-      setEnrollError('Customer, type, brand, model, and serial number are required.');
+    if (!form.customerId || !form.type || !form.brand || !form.model) {
+      setEnrollError('Customer, type, brand, and model are required.');
       return;
     }
 
     enrollMutation.mutate(form);
+  }
+
+  function openEditDevice(device) {
+    setEditError('');
+    setEditingDevice(device);
+    setEditForm({
+      brand: device.brand || '',
+      model: device.model || '',
+      serialNumber: device.serialNumber || '',
+      imei: device.imei || ''
+    });
+  }
+
+  function updateEditField(key, value) {
+    setEditForm((current) => ({
+      ...current,
+      [key]: value
+    }));
+  }
+
+  function handleUpdateDevice() {
+    if (!editingDevice) {
+      return;
+    }
+
+    setEditError('');
+
+    if (!editForm.brand || !editForm.model) {
+      setEditError('Brand and model are required.');
+      return;
+    }
+
+    updateMutation.mutate({
+      id: editingDevice.id,
+      payload: {
+        brand: editForm.brand,
+        model: editForm.model,
+        serialNumber: editForm.serialNumber,
+        imei: editForm.imei
+      }
+    });
   }
 
   return (
@@ -223,6 +296,7 @@ export default function Devices() {
               <option value="ios">iOS</option>
               <option value="windows">Windows</option>
               <option value="mac">Mac</option>
+              <option value="linux">Linux</option>
               <option value="car">Car</option>
             </select>
             <label style={styles.checkboxRow}>
@@ -250,12 +324,13 @@ export default function Devices() {
 
       <DataTable
         columns={[
+          { key: 'deviceCode', label: 'Device ID' },
           { key: 'customerName', label: 'Customer' },
           { key: 'deviceType', label: 'Device Type' },
           { key: 'deviceModel', label: 'Model' },
           {
             key: 'identifier',
-            label: 'Device Identifier',
+            label: 'IMEI / Serial',
             render: (row) => (
               <div style={styles.identifierCell}>
                 <div style={styles.identifierValue}>{row.identifier.value}</div>
@@ -271,6 +346,13 @@ export default function Devices() {
             label: 'Action',
             render: (row) => (
               <div style={styles.actions}>
+                <button
+                  style={{ ...styles.editButton, ...(!canEnroll ? styles.disabledButton : null) }}
+                  onClick={() => openEditDevice(devicesQuery.data.find((device) => device.id === row.id) || row)}
+                  disabled={!canEnroll}
+                >
+                  Edit
+                </button>
                 <button
                   style={{
                     ...(row.action === 'lock' ? styles.lockButton : styles.unlockButton),
@@ -334,6 +416,7 @@ export default function Devices() {
               <option value="ios">iOS</option>
               <option value="windows">Windows</option>
               <option value="mac">Mac</option>
+              <option value="linux">Linux</option>
               <option value="car">Car</option>
             </select>
           </div>
@@ -348,10 +431,54 @@ export default function Devices() {
           <div style={modalFormStyles.field}>
             <label style={modalFormStyles.label}>Serial number</label>
             <input style={modalFormStyles.input} value={form.serialNumber} onChange={(event) => updateField('serialNumber', event.target.value)} />
+            <div style={modalFormStyles.hint}>Optional. Leave blank if the system cannot fetch it yet.</div>
           </div>
           <div style={modalFormStyles.field}>
             <label style={modalFormStyles.label}>IMEI</label>
             <input style={modalFormStyles.input} value={form.imei} onChange={(event) => updateField('imei', event.target.value)} />
+            <div style={modalFormStyles.hint}>Optional for phones. Enter it manually later if auto-capture is blocked.</div>
+          </div>
+          <div style={{ ...modalFormStyles.field, ...modalFormStyles.fieldFull }}>
+            <label style={modalFormStyles.label}>Device ID</label>
+            <input style={{ ...modalFormStyles.input, opacity: 0.75 }} value="Auto-generated after save (example: WIN0000001)" readOnly />
+          </div>
+        </div>
+      </ActionModal>
+
+      <ActionModal
+        isOpen={Boolean(editingDevice)}
+        title="Edit device"
+        subtitle={editingDevice ? 'Update the hardware details for ' + editingDevice.deviceCode + '. If identifiers are not available, leave them blank and the dashboard will show -.' : ''}
+        submitLabel="Save changes"
+        loading={updateMutation.isPending}
+        error={editError}
+        success=""
+        onClose={() => {
+          setEditingDevice(null);
+          setEditError('');
+        }}
+        onSubmit={handleUpdateDevice}
+      >
+        <div style={modalFormStyles.grid}>
+          <div style={{ ...modalFormStyles.field, ...modalFormStyles.fieldFull }}>
+            <label style={modalFormStyles.label}>Device ID</label>
+            <input style={{ ...modalFormStyles.input, opacity: 0.75 }} value={editingDevice?.deviceCode || '-'} readOnly />
+          </div>
+          <div style={modalFormStyles.field}>
+            <label style={modalFormStyles.label}>Brand</label>
+            <input style={modalFormStyles.input} value={editForm.brand} onChange={(event) => updateEditField('brand', event.target.value)} />
+          </div>
+          <div style={modalFormStyles.field}>
+            <label style={modalFormStyles.label}>Model</label>
+            <input style={modalFormStyles.input} value={editForm.model} onChange={(event) => updateEditField('model', event.target.value)} />
+          </div>
+          <div style={modalFormStyles.field}>
+            <label style={modalFormStyles.label}>Serial number</label>
+            <input style={modalFormStyles.input} value={editForm.serialNumber} onChange={(event) => updateEditField('serialNumber', event.target.value)} placeholder="-" />
+          </div>
+          <div style={modalFormStyles.field}>
+            <label style={modalFormStyles.label}>IMEI</label>
+            <input style={modalFormStyles.input} value={editForm.imei} onChange={(event) => updateEditField('imei', event.target.value)} placeholder="-" />
           </div>
         </div>
       </ActionModal>
@@ -405,6 +532,14 @@ const styles = {
   actions: {
     display: 'flex',
     gap: '8px'
+  },
+  editButton: {
+    background: 'rgba(15, 23, 42, 0.88)',
+    color: '#f8fafc',
+    border: '1px solid rgba(148, 163, 184, 0.18)',
+    borderRadius: '10px',
+    padding: '10px 12px',
+    cursor: 'pointer'
   },
   lockButton: {
     background: '#dc2626',

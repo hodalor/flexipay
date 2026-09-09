@@ -8,6 +8,7 @@ require('./register-aliases');
 const app = require('@src/app');
 const logger = require('@utils/logger');
 const { sequelize } = require('@models');
+const { ensureDeviceCodeColumn } = require('@src/scripts/ensure-device-code-column');
 const { connectRedis } = require('@config/redis');
 const { startScheduler } = require('@services/scheduler.service');
 
@@ -16,6 +17,7 @@ const port = Number(process.env.PORT || 4000);
 async function bootstrap() {
   try {
     await sequelize.authenticate();
+    await ensureDeviceCodeColumn(sequelize);
     await sequelize.sync({ alter: true });
     logger.info('Database connection established and schema synchronized');
     await connectRedis();

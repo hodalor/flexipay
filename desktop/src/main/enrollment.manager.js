@@ -10,11 +10,27 @@ const store = new Store({
 });
 
 function getPlatformType() {
-  return process.platform === 'darwin' ? 'mac' : 'windows';
+  if (process.platform === 'darwin') {
+    return 'mac';
+  }
+
+  if (process.platform === 'linux') {
+    return 'linux';
+  }
+
+  return 'windows';
 }
 
 function getBrandName() {
-  return process.platform === 'darwin' ? 'Apple' : 'Windows PC';
+  if (process.platform === 'darwin') {
+    return 'Apple';
+  }
+
+  if (process.platform === 'linux') {
+    return 'Linux PC';
+  }
+
+  return 'Windows PC';
 }
 
 function getModelName() {

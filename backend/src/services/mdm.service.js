@@ -413,6 +413,55 @@ async function macUnlock(device, command) {
   }
 }
 
+async function linuxLock(device, reason, command) {
+  try {
+    const { sendPush } = require('@services/notification.service');
+    const response = await sendPush(device.fcmToken, 'linux', 'FlexiPay device lock', reason, {
+      type: 'LOCK',
+      deviceId: device.id,
+      reason
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'FCM linux lock failed');
+    }
+
+    await finalizeCommand(command, 'delivered');
+    return { success: true };
+  } catch (error) {
+    logger.error('Linux lock failed', {
+      deviceId: device.id,
+      error: error.message
+    });
+    await finalizeCommand(command, 'failed', { reason: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+async function linuxUnlock(device, command) {
+  try {
+    const { sendPush } = require('@services/notification.service');
+    const response = await sendPush(device.fcmToken, 'linux', 'FlexiPay device unlock', 'Account is current', {
+      type: 'UNLOCK',
+      deviceId: device.id
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'FCM linux unlock failed');
+    }
+
+    await finalizeCommand(command, 'acknowledged');
+    return { success: true };
+  } catch (error) {
+    logger.error('Linux unlock failed', {
+      deviceId: device.id,
+      error: error.message
+    });
+    await finalizeCommand(command, 'failed', { reason: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
 /**
  * Sends a lock request to the GPS/telematics immobilizer vendor API.
  *
@@ -495,6 +544,7 @@ function getHandlers(action) {
     ios: action === 'lock' ? iosLock : iosUnlock,
     windows: action === 'lock' ? windowsLock : windowsUnlock,
     mac: action === 'lock' ? macLock : macUnlock,
+    linux: action === 'lock' ? linuxLock : linuxUnlock,
     car: action === 'lock' ? carLock : carUnlock
   };
 }
@@ -597,6 +647,8 @@ module.exports = {
   windowsUnlock,
   macLock,
   macUnlock,
+  linuxLock,
+  linuxUnlock,
   carLock,
   carUnlock
 };

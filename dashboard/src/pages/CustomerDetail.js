@@ -27,7 +27,7 @@ function formatDeviceIdentifier(device) {
     return (looksLikeFallbackIdentifier(device.serialNumber) ? 'Fallback Device ID: ' : 'Hardware Serial: ') + device.serialNumber;
   }
 
-  return 'Identifier unavailable';
+  return 'IMEI / Serial: -';
 }
 
 export default function CustomerDetail() {
@@ -62,7 +62,7 @@ export default function CustomerDetail() {
         <h3>Devices</h3>
         {(customer.devices || []).map((device) => (
           <div key={device.id} style={styles.item}>
-            {device.brand + ' ' + device.model} | {device.type} | {device.isLocked ? 'Locked' : 'Active'} | {formatDeviceIdentifier(device)}
+            {(device.deviceCode || '-') + ' | ' + device.brand + ' ' + device.model} | {device.type} | {device.isLocked ? 'Locked' : 'Active'} | {formatDeviceIdentifier(device)}
           </div>
         ))}
       </div>

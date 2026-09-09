@@ -30,6 +30,11 @@ export async function enrollDevice(payload) {
   return response.data.data;
 }
 
+export async function updateDevice(id, payload) {
+  const response = await client.put('/devices/' + id, payload);
+  return response.data.data;
+}
+
 export async function lockDevice(id, reason) {
   const response = await client.post('/devices/' + id + '/lock', { reason });
   return response.data.data;

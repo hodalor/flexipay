@@ -8,6 +8,7 @@ const router = express.Router();
 router.use(authMiddleware);
 router.get('/', deviceController.getDevices);
 router.post('/enroll', deviceController.enrollDevice);
+router.put('/:id', deviceController.updateDevice);
 router.get('/:id', deviceController.getDeviceById);
 router.get('/:id/status', deviceController.getDeviceStatus);
 router.post('/:id/lock', allowRoles('admin'), deviceController.lockManagedDevice);

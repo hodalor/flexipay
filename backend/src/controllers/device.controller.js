@@ -1,6 +1,8 @@
+const { Op } = require('sequelize');
 const { Customer, Device, DeviceCommand, Loan } = require('@models');
 const { success, failure } = require('@utils/response');
 const { generateDeviceToken, generateReference } = require('@utils/crypto');
+const { generateNextDeviceCode } = require('@utils/device-code');
 const { formatAmount, normalizeAmountInt } = require('@utils/money');
 const { lockDevice, unlockDevice } = require('@services/mdm.service');
 const { broadcastRealtimeEvent } = require('@services/realtime.service');
@@ -23,6 +25,7 @@ async function getDevices(req, res, next) {
 
       return {
         id: device.id,
+        deviceCode: device.deviceCode,
         customerId: device.customerId,
         customerName: device.customer ? device.customer.fullName : null,
         type: device.type,
@@ -48,7 +51,7 @@ async function getDevices(req, res, next) {
 }
 
 function validateEnrollmentPayload(payload) {
-  const requiredFields = ['customerId', 'type', 'brand', 'model', 'serialNumber'];
+  const requiredFields = ['customerId', 'type', 'brand', 'model'];
 
   return requiredFields.filter(function findMissing(field) {
     return !payload[field];
@@ -69,11 +72,23 @@ async function enrollDevice(req, res, next) {
       return failure(res, 'Customer not found', 404);
     }
 
-    const existingDevice = await Device.findOne({
-      where: {
-        serialNumber: req.body.serialNumber
-      }
-    });
+    const identifierCandidates = [];
+
+    if (req.body.serialNumber) {
+      identifierCandidates.push({ serialNumber: req.body.serialNumber });
+    }
+
+    if (req.body.mdmEnrollmentId) {
+      identifierCandidates.push({ mdmEnrollmentId: req.body.mdmEnrollmentId });
+    }
+
+    const existingDevice = identifierCandidates.length
+      ? await Device.findOne({
+        where: {
+          [Op.or]: identifierCandidates
+        }
+      })
+      : null;
 
     if (existingDevice && existingDevice.customerId !== customer.id) {
       return failure(res, 'This device is already assigned to another customer', 409);
@@ -84,8 +99,8 @@ async function enrollDevice(req, res, next) {
       type: req.body.type,
       brand: req.body.brand,
       model: req.body.model,
-      serialNumber: req.body.serialNumber,
-      imei: req.body.imei,
+      serialNumber: req.body.serialNumber || null,
+      imei: req.body.imei || null,
       fcmToken: req.body.fcmToken,
       apnsToken: req.body.apnsToken,
       mdmEnrollmentId: req.body.mdmEnrollmentId || generateReference('MDM'),
@@ -95,7 +110,10 @@ async function enrollDevice(req, res, next) {
 
     const device = existingDevice
       ? await existingDevice.update(enrollmentPayload)
-      : await Device.create(enrollmentPayload);
+      : await Device.create({
+        ...enrollmentPayload,
+        deviceCode: await generateNextDeviceCode(Device, req.body.type)
+      });
 
     broadcastRealtimeEvent('device.enrolled', ['devices', 'customers'], {
       deviceId: device.id,
@@ -107,6 +125,48 @@ async function enrollDevice(req, res, next) {
       device,
       deviceToken: generateDeviceToken(device)
     }, 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function updateDevice(req, res, next) {
+  try {
+    if (req.user?.userType !== 'admin') {
+      return failure(res, 'Only admin users can edit devices', 403);
+    }
+
+    const device = await Device.findByPk(req.params.id);
+
+    if (!device) {
+      return failure(res, 'Device not found', 404);
+    }
+
+    if (req.body.serialNumber) {
+      const conflictingDevice = await Device.findOne({
+        where: {
+          serialNumber: req.body.serialNumber
+        }
+      });
+
+      if (conflictingDevice && conflictingDevice.id !== device.id) {
+        return failure(res, 'Another device already uses this serial number', 409);
+      }
+    }
+
+    await device.update({
+      brand: req.body.brand || device.brand,
+      model: req.body.model || device.model,
+      serialNumber: req.body.serialNumber || null,
+      imei: req.body.imei || null
+    });
+
+    broadcastRealtimeEvent('device.updated', ['devices', 'customers'], {
+      deviceId: device.id,
+      customerId: device.customerId
+    });
+
+    return success(res, 'Device updated successfully', device);
   } catch (error) {
     return next(error);
   }
@@ -233,6 +293,7 @@ async function getDeviceStatus(req, res, next) {
 module.exports = {
   getDevices,
   enrollDevice,
+  updateDevice,
   getDeviceById,
   lockManagedDevice,
   unlockManagedDevice,
