@@ -1,12 +1,8 @@
 const { BrowserWindow, ipcMain, shell } = require('electron');
-const Store = require('electron-store');
 const lockManager = require('@main/lock.manager');
 const { checkDeviceStatus } = require('@main/heartbeat');
 const { enrollDesktopDevice, getEnrollmentState } = require('@main/enrollment.manager');
-
-const store = new Store({
-  name: 'flexipay-desktop'
-});
+const { store, setValue } = require('@main/state.store');
 
 /**
  * Registers preload-safe IPC handlers for device state and external payment flows.
@@ -29,7 +25,7 @@ function registerIpcHandlers() {
     return store.get('deviceToken');
   });
 
-  ipcMain.handle('device:getEnrollmentState', function getEnrollmentSnapshot() {
+  ipcMain.handle('device:getEnrollmentState', async function getEnrollmentSnapshot() {
     return getEnrollmentState();
   });
 
@@ -49,7 +45,7 @@ function registerIpcHandlers() {
   });
 
   ipcMain.handle('store:set', function setStoreValue(event, key, value) {
-    store.set(key, value);
+    setValue(key, value);
     return true;
   });
 

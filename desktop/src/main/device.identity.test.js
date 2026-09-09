@@ -5,7 +5,9 @@ jest.mock('@main/logger', () => ({
 const {
   normalizeHardwareValue,
   parseWindowsSerialOutput,
-  parseMacSerialOutput
+  parseMacSerialOutput,
+  parseWindowsMachineGuid,
+  parseMacPlatformUuid
 } = require('./device.identity');
 
 describe('device identity helpers', () => {
@@ -22,5 +24,10 @@ describe('device identity helpers', () => {
   test('parses macOS serial output from ioreg and system_profiler', () => {
     expect(parseMacSerialOutput('"IOPlatformSerialNumber" = "C02ABC123XYZ"')).toBe('C02ABC123XYZ');
     expect(parseMacSerialOutput('Serial Number (system): C02ABC123XYZ')).toBe('C02ABC123XYZ');
+  });
+
+  test('parses stable machine fingerprints from Windows and macOS output', () => {
+    expect(parseWindowsMachineGuid('MachineGuid\r\n6f9619ff-8b86-d011-b42d-00cf4fc964ff\r\n')).toBe('6f9619ff-8b86-d011-b42d-00cf4fc964ff');
+    expect(parseMacPlatformUuid('"IOPlatformUUID" = "E5A1B8E8-4B65-5B90-8F2A-7B1A9E9A1111"')).toBe('E5A1B8E8-4B65-5B90-8F2A-7B1A9E9A1111');
   });
 });

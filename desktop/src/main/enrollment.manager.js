@@ -1,13 +1,9 @@
 const os = require('os');
 const crypto = require('crypto');
 const axios = require('axios');
-const Store = require('electron-store');
 const logger = require('@main/logger');
-const { resolveHardwareSerialNumber } = require('@main/device.identity');
-
-const store = new Store({
-  name: 'flexipay-desktop'
-});
+const { resolveHardwareSerialNumber, resolveStableMachineFingerprint } = require('@main/device.identity');
+const { store, setValue, setValues } = require('@main/state.store');
 
 function getPlatformType() {
   if (process.platform === 'darwin') {
@@ -37,12 +33,14 @@ function getModelName() {
   return os.hostname();
 }
 
-function getInstallationId() {
+async function getInstallationId() {
   let installationId = store.get('installationId');
 
   if (!installationId) {
-    installationId = 'FXP-DESKTOP-' + crypto.randomUUID();
-    store.set('installationId', installationId);
+    const stableMachineFingerprint = await resolveStableMachineFingerprint();
+    const fingerprintSource = stableMachineFingerprint || os.hostname() + '-' + crypto.createHash('sha256').update(os.arch()).digest('hex');
+    installationId = 'FXP-DESKTOP-' + crypto.createHash('sha256').update(String(fingerprintSource)).digest('hex').slice(0, 24).toUpperCase();
+    setValue('installationId', installationId);
   }
 
   return installationId;
@@ -59,13 +57,13 @@ function normalizeBackendUrl(rawUrl) {
   return base + '/api';
 }
 
-function getEnrollmentState() {
+async function getEnrollmentState() {
   return {
     isEnrolled: Boolean(store.get('deviceId') && store.get('deviceToken')),
     backendUrl: normalizeBackendUrl(store.get('backendUrl')),
     deviceId: store.get('deviceId') || null,
     serialNumber: store.get('serialNumber') || null,
-    installationId: getInstallationId(),
+    installationId: await getInstallationId(),
     platformType: getPlatformType(),
     deviceName: getModelName(),
     customer: store.get('customerProfile') || null
@@ -80,7 +78,7 @@ async function enrollDesktopDevice(payload) {
       password: payload.password
     });
     const session = loginResponse.data.data;
-    const installationId = getInstallationId();
+    const installationId = await getInstallationId();
     const detectedSerialNumber = await resolveHardwareSerialNumber();
     const serialNumber = payload.serialNumber || detectedSerialNumber || installationId;
 
@@ -98,19 +96,21 @@ async function enrollDesktopDevice(payload) {
     });
 
     const enrollment = enrollResponse.data.data;
-    store.set('backendUrl', backendUrl);
-    store.set('deviceId', enrollment.device.id);
-    store.set('deviceToken', enrollment.deviceToken);
-    store.set('serialNumber', enrollment.device.serialNumber || serialNumber);
-    store.set('customerProfile', {
-      id: session.customer.id,
-      fullName: session.customer.fullName,
-      email: session.customer.email,
-      phone: session.customer.phone
-    });
-    store.set('deviceState', {
-      isLocked: Boolean(enrollment.device.isLocked),
-      customerName: session.customer.fullName
+    setValues({
+      backendUrl,
+      deviceId: enrollment.device.id,
+      deviceToken: enrollment.deviceToken,
+      serialNumber: enrollment.device.serialNumber || serialNumber,
+      customerProfile: {
+        id: session.customer.id,
+        fullName: session.customer.fullName,
+        email: session.customer.email,
+        phone: session.customer.phone
+      },
+      deviceState: {
+        isLocked: Boolean(enrollment.device.isLocked),
+        customerName: session.customer.fullName
+      }
     });
 
     logger.info('Desktop device enrolled successfully', {
@@ -120,7 +120,7 @@ async function enrollDesktopDevice(payload) {
     });
 
     return {
-      ...getEnrollmentState(),
+      ...(await getEnrollmentState()),
       deviceToken: enrollment.deviceToken
     };
   } catch (error) {

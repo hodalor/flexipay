@@ -1,12 +1,8 @@
 const axios = require('axios');
 const { net, powerMonitor } = require('electron');
-const Store = require('electron-store');
 const lockManager = require('@main/lock.manager');
 const logger = require('@main/logger');
-
-const store = new Store({
-  name: 'flexipay-desktop'
-});
+const { store, setValues } = require('@main/state.store');
 
 function getDeviceContext() {
   const deviceId = store.get('deviceId') || process.env.DEVICE_ID;
@@ -65,10 +61,12 @@ async function checkDeviceStatus(mainWindow) {
     });
     const deviceState = response.data.data;
 
-    store.set('lastOnline', Date.now());
-    store.set('deviceState', deviceState);
-    store.set('deviceId', context.deviceId);
-    store.set('deviceToken', context.deviceToken);
+    setValues({
+      lastOnline: Date.now(),
+      deviceState,
+      deviceId: context.deviceId,
+      deviceToken: context.deviceToken
+    });
 
     if (deviceState.isLocked && !lockManager.isLocked()) {
       lockManager.createLockWindow();
@@ -127,9 +125,9 @@ function startHeartbeat(mainWindow) {
         error: error.message
       });
     });
-  }, 15 * 60 * 1000);
+  }, 5 * 60 * 1000);
 
-  logger.info('Heartbeat started at 15 minute interval');
+  logger.info('Heartbeat started at 5 minute interval');
   return intervalId;
 }
 
