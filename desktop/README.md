@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node.js 20.x
-- Yarn 1.22+
+- npm 10+
 - Windows for service validation
 - macOS for LaunchDaemon validation
 
@@ -11,18 +11,19 @@
 
 1. `cd desktop`
 2. Copy `.env.example` to `.env`.
-3. Install dependencies with `yarn install`.
+3. Install dependencies with `npm install`.
 4. Ensure `BACKEND_URL` points at the backend API.
-5. Run `yarn bundle:renderer` once before first launch if needed.
+5. Run `npm run bundle:renderer` once before first launch if needed.
 6. Start the app and complete the first-run enrollment screen with the financed customer credentials.
 7. Run all desktop commands from inside this `desktop` folder only.
 
 ## Run
 
-- Launch app: `yarn start`
-- Build local bundles: `yarn bundle`
-- Package for distribution: `yarn make`
-- Build the Windows installer only: `yarn make:win`
+- Launch app: `npm start`
+- Build local bundles: `npm run bundle`
+- Package for distribution: `npm run make`
+- Build the Windows installer only: `npm run make:win`
+- Run unit tests: `npm test`
 
 ## Windows Installer Output
 

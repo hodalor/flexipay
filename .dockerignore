@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/build
+**/logs
+**/.git
+**/.expo
+**/coverage
+mobile/android/.gradle
+mobile/ios/build
+*.log
+*.tmp

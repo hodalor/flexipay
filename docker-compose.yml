@@ -1,0 +1,20 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "4000:4000"
+    env_file:
+      - backend/.env
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+      args:
+        API_BASE_URL: http://backend:4000/api
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend

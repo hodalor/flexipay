@@ -3,21 +3,22 @@
 ## Prerequisites
 
 - Node.js 20.x
-- Yarn 1.22+
+- npm 10+
 - Backend package running on a reachable host
 
 ## Setup
 
 1. `cd dashboard`
 2. Copy `.env.example` to `.env`.
-3. Install dependencies with `yarn install`.
-4. Start the backend from the `backend` folder with `yarn dev`.
+3. Install dependencies with `npm install`.
+4. Start the backend from the `backend` folder with `npm run dev`.
 5. Run all dashboard commands from inside this `dashboard` folder only.
 
 ## Run
 
-- Development: `yarn start`
-- Production bundle: `yarn build`
+- Development: `npm start`
+- Production bundle: `npm run build`
+- Run unit tests: `npm test`
 
 ## Platform Notes
 
