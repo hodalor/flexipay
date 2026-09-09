@@ -13,6 +13,7 @@ import { useDevices } from '@hooks/useDevices';
 import { hasAction } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
 import { metricGridStyle } from '@/styles/layout';
+import { useToast } from '@components/ToastProvider';
 
 function deriveStatus(device) {
   const lastSeen = device.lastSeen ? new Date(device.lastSeen).getTime() : 0;
@@ -35,6 +36,7 @@ function deriveStatus(device) {
 
 export default function Devices() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canEnroll = hasAction(user, 'devices.enroll');
   const canLock = hasAction(user, 'devices.lock');
   const canUnlock = hasAction(user, 'devices.unlock');
@@ -48,10 +50,8 @@ export default function Devices() {
     type: 'all',
     overdueOnly: false
   });
-  const [toast, setToast] = useState(null);
   const [isEnrollOpen, setIsEnrollOpen] = useState(false);
   const [enrollError, setEnrollError] = useState('');
-  const [enrollSuccess, setEnrollSuccess] = useState('');
   const [form, setForm] = useState({
     customerId: '',
     type: 'android',
@@ -72,16 +72,18 @@ export default function Devices() {
       return unlockDevice(pendingAction.id);
     },
     onSuccess: () => {
-      setToast({
+      showToast({
         type: 'success',
+        title: 'Device updated',
         message: 'Device ' + (pendingAction.action === 'lock' ? 'locked' : 'unlocked') + ' successfully.'
       });
       setPendingAction(null);
       queryClient.invalidateQueries({ queryKey: ['devices'] });
     },
     onError: (error) => {
-      setToast({
+      showToast({
         type: 'error',
+        title: 'Device action failed',
         message: error.response?.data?.message || 'Device action failed.'
       });
     }
@@ -90,7 +92,6 @@ export default function Devices() {
   const enrollMutation = useMutation({
     mutationFn: enrollDevice,
     onSuccess: (data) => {
-      setEnrollSuccess('Device enrolled successfully. Device token is now ready for heartbeat and lock sync.');
       setEnrollError('');
       setForm({
         customerId: '',
@@ -102,13 +103,20 @@ export default function Devices() {
       });
       queryClient.invalidateQueries({ queryKey: ['devices'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      setToast({
+      setIsEnrollOpen(false);
+      showToast({
         type: 'success',
+        title: 'Device enrolled',
         message: 'Device enrolled: ' + data.device.brand + ' ' + data.device.model
       });
     },
     onError: (error) => {
       setEnrollError(error.response?.data?.message || 'Device enrollment failed.');
+      showToast({
+        type: 'error',
+        title: 'Enrollment failed',
+        message: error.response?.data?.message || 'Device enrollment failed.'
+      });
     }
   });
 
@@ -152,7 +160,6 @@ export default function Devices() {
 
   function handleEnroll() {
     setEnrollError('');
-    setEnrollSuccess('');
 
     if (!form.customerId || !form.type || !form.brand || !form.model || !form.serialNumber) {
       setEnrollError('Customer, type, brand, model, and serial number are required.');
@@ -168,10 +175,36 @@ export default function Devices() {
         eyebrow="Device Control"
         title="Device fleet"
         subtitle="Enroll financed devices, watch live status changes from mobile and desktop clients, and send immediate lock actions from the same queue."
+        toolbarContent={(
+          <>
+            <select value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })} style={styles.filterControl}>
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="overdue">Overdue</option>
+              <option value="locked">Locked</option>
+              <option value="offline">Offline</option>
+            </select>
+            <select value={filters.type} onChange={(event) => setFilters({ ...filters, type: event.target.value })} style={styles.filterControl}>
+              <option value="all">All devices</option>
+              <option value="android">Android</option>
+              <option value="ios">iOS</option>
+              <option value="windows">Windows</option>
+              <option value="mac">Mac</option>
+              <option value="car">Car</option>
+            </select>
+            <label style={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={filters.overdueOnly}
+                onChange={(event) => setFilters({ ...filters, overdueOnly: event.target.checked })}
+              />
+              Overdue only
+            </label>
+          </>
+        )}
         actionLabel={canEnroll ? 'Register device' : null}
         onAction={canEnroll ? () => {
           setEnrollError('');
-          setEnrollSuccess('');
           setIsEnrollOpen(true);
         } : undefined}
       />
@@ -182,31 +215,6 @@ export default function Devices() {
         <KPICard label="Locked Devices" value={stats.locked} accent="#dc2626" />
       </div>
 
-      <div style={styles.filterBar}>
-        <select value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })} style={styles.filterControl}>
-          <option value="all">All statuses</option>
-          <option value="active">Active</option>
-          <option value="overdue">Overdue</option>
-          <option value="locked">Locked</option>
-          <option value="offline">Offline</option>
-        </select>
-        <select value={filters.type} onChange={(event) => setFilters({ ...filters, type: event.target.value })} style={styles.filterControl}>
-          <option value="all">All devices</option>
-          <option value="android">Android</option>
-          <option value="ios">iOS</option>
-          <option value="windows">Windows</option>
-          <option value="mac">Mac</option>
-          <option value="car">Car</option>
-        </select>
-        <label style={styles.checkboxRow}>
-          <input
-            type="checkbox"
-            checked={filters.overdueOnly}
-            onChange={(event) => setFilters({ ...filters, overdueOnly: event.target.checked })}
-          />
-          Overdue only
-        </label>
-      </div>
       <DataTable
         columns={[
           { key: 'customerName', label: 'Customer' },
@@ -227,7 +235,6 @@ export default function Devices() {
                     ...((row.action === 'lock' && !canLock) || (row.action === 'unlock' && !canUnlock) ? styles.disabledButton : null)
                   }}
                   onClick={() => {
-                    setToast(null);
                     setPendingAction({ id: row.id, action: row.action });
                   }}
                   disabled={(row.action === 'lock' && !canLock) || (row.action === 'unlock' && !canUnlock)}
@@ -250,7 +257,6 @@ export default function Devices() {
         confirmLabel={pendingAction ? (pendingAction.action === 'lock' ? 'Lock Device' : 'Unlock Device') : 'Confirm'}
         danger={Boolean(pendingAction && pendingAction.action === 'lock')}
         loading={mutation.isPending}
-        toast={toast}
         onCancel={() => setPendingAction(null)}
         onConfirm={() => mutation.mutate()}
       />
@@ -262,8 +268,11 @@ export default function Devices() {
         submitLabel="Enroll device"
         loading={enrollMutation.isPending}
         error={enrollError}
-        success={enrollSuccess}
-        onClose={() => setIsEnrollOpen(false)}
+        success=""
+        onClose={() => {
+          setIsEnrollOpen(false);
+          setEnrollError('');
+        }}
         onSubmit={handleEnroll}
       >
         <div style={modalFormStyles.grid}>
@@ -323,13 +332,6 @@ const styles = {
     borderRadius: '10px',
     padding: '10px 12px',
     cursor: 'pointer'
-  },
-  filterBar: {
-    display: 'flex',
-    gap: '12px',
-    alignItems: 'center',
-    marginBottom: '2px',
-    flexWrap: 'wrap'
   },
   filterControl: {
     border: '1px solid rgba(148, 163, 184, 0.18)',

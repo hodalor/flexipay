@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function PageHeader({ eyebrow, title, subtitle, actionLabel, onAction, actionDisabled, secondaryAction }) {
+export default function PageHeader({ eyebrow, title, subtitle, actionLabel, onAction, actionDisabled, secondaryAction, toolbarContent }) {
   return (
     <div style={styles.header}>
       <div style={styles.copy}>
@@ -8,6 +8,7 @@ export default function PageHeader({ eyebrow, title, subtitle, actionLabel, onAc
         <h1 style={styles.title}>{title}</h1>
       </div>
       <div style={styles.actions}>
+        {toolbarContent ? <div style={styles.toolbar}>{toolbarContent}</div> : null}
         {secondaryAction || null}
         {actionLabel ? (
           <button type="button" style={{ ...styles.button, ...(actionDisabled ? styles.buttonDisabled : null) }} onClick={onAction} disabled={actionDisabled}>
@@ -49,7 +50,16 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    marginLeft: 'auto'
+    marginLeft: 'auto',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end'
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end'
   },
   button: {
     border: 0,

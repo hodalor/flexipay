@@ -40,20 +40,25 @@ const styles = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(15, 23, 42, 0.55)',
+    background: 'rgba(2, 6, 23, 0.78)',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    padding: '24px',
+    zIndex: 1250
   },
   card: {
     width: '100%',
     maxWidth: '420px',
-    background: '#ffffff',
+    border: '1px solid rgba(148, 163, 184, 0.16)',
+    background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(15, 23, 42, 0.94) 100%)',
     borderRadius: '18px',
-    padding: '24px'
+    padding: '24px',
+    color: '#f8fafc',
+    boxShadow: '0 24px 60px rgba(2, 6, 23, 0.34)'
   },
   message: {
-    color: '#475569'
+    color: '#94a3b8'
   },
   toast: {
     borderRadius: '12px',
@@ -61,12 +66,12 @@ const styles = {
     marginTop: '12px'
   },
   toastSuccess: {
-    background: '#dcfce7',
-    color: '#166534'
+    background: 'rgba(6, 95, 70, 0.42)',
+    color: '#ccfbf1'
   },
   toastError: {
-    background: '#fee2e2',
-    color: '#991b1b'
+    background: 'rgba(127, 29, 29, 0.42)',
+    color: '#fecaca'
   },
   actions: {
     display: 'flex',
@@ -91,9 +96,9 @@ const styles = {
     cursor: 'pointer'
   },
   secondary: {
-    background: '#e2e8f0',
-    color: '#0f172a',
-    border: 0,
+    background: 'transparent',
+    color: '#e2e8f0',
+    border: '1px solid rgba(148, 163, 184, 0.22)',
     borderRadius: '10px',
     padding: '10px 14px',
     cursor: 'pointer'

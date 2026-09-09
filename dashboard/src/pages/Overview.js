@@ -141,7 +141,7 @@ export default function Overview() {
         <KPICard label="Total Portfolio Value (ZMW)" value={formatCurrency(analytics.totalPortfolioValue)} accent="#16a34a" />
         <KPICard label="Overdue Accounts" value={analytics.overdueLoans.length} accent="#d97706" />
         <KPICard label="Locked Devices" value={analytics.lockedDevices.length} accent="#dc2626" />
-        <KPICard label="Collections This Month" value={formatCurrency(analytics.collectionsThisMonth)} accent="#0f766e" />
+        <KPICard label="Coll This Month" value={formatCurrency(analytics.collectionsThisMonth)} accent="#0f766e" />
         <KPICard label="Default Rate %" value={analytics.defaultRate.toFixed(2) + '%'} accent="#475569" />
       </div>
       <div style={styles.chartsGrid}>

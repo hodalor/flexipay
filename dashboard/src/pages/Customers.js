@@ -10,9 +10,11 @@ import { useCustomers } from '@hooks/useCustomers';
 import { hasAction } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
 import { metricGridStyle } from '@/styles/layout';
+import { useToast } from '@components/ToastProvider';
 
 export default function Customers() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canCreateCustomer = hasAction(user, 'customers.create');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -25,13 +27,11 @@ export default function Customers() {
     password: 'Password123!'
   });
   const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState('');
   const query = useCustomers();
 
   const mutation = useMutation({
     mutationFn: createCustomer,
     onSuccess: () => {
-      setFormSuccess('Customer created successfully. You can now assign a device or create a loan.');
       setFormError('');
       setForm({
         fullName: '',
@@ -41,9 +41,20 @@ export default function Customers() {
         password: 'Password123!'
       });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      setIsModalOpen(false);
+      showToast({
+        type: 'success',
+        title: 'Customer created',
+        message: 'The customer account is ready for device assignment and loans.'
+      });
     },
     onError: (error) => {
       setFormError(error.response?.data?.message || 'Unable to create customer.');
+      showToast({
+        type: 'error',
+        title: 'Create customer failed',
+        message: error.response?.data?.message || 'Unable to create customer.'
+      });
     }
   });
 
@@ -90,7 +101,6 @@ export default function Customers() {
 
   function handleCreateCustomer() {
     setFormError('');
-    setFormSuccess('');
 
     if (!form.fullName || !form.phone || !form.email || !form.nationalId || !form.password) {
       setFormError('All customer fields are required.');
@@ -106,10 +116,12 @@ export default function Customers() {
         eyebrow="Sales Operations"
         title="Customer pipeline"
         subtitle="Create customers, watch their loan risk profile, and move directly into device assignment and financing without leaving the dashboard."
+        toolbarContent={(
+          <input style={styles.search} placeholder="Search by name, phone, or email" value={search} onChange={(event) => setSearch(event.target.value)} />
+        )}
         actionLabel={canCreateCustomer ? 'Create customer' : null}
         onAction={canCreateCustomer ? () => {
           setFormError('');
-          setFormSuccess('');
           setIsModalOpen(true);
         } : undefined}
       />
@@ -118,10 +130,6 @@ export default function Customers() {
         <KPICard label="Customer Base" value={stats.total} />
         <KPICard label="Active Accounts" value={stats.active} accent="#16a34a" />
         <KPICard label="High Risk Profiles" value={stats.highRisk} accent="#f97316" />
-      </div>
-
-      <div style={styles.toolbar}>
-        <input style={styles.search} placeholder="Search by name, phone, or email" value={search} onChange={(event) => setSearch(event.target.value)} />
       </div>
 
       <DataTable
@@ -149,8 +157,11 @@ export default function Customers() {
         submitLabel="Create customer"
         loading={mutation.isPending}
         error={formError}
-        success={formSuccess}
-        onClose={() => setIsModalOpen(false)}
+        success=""
+        onClose={() => {
+          setIsModalOpen(false);
+          setFormError('');
+        }}
         onSubmit={handleCreateCustomer}
       >
         <div style={modalFormStyles.grid}>
@@ -189,14 +200,9 @@ const styles = {
   metrics: {
     ...metricGridStyle
   },
-  toolbar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '12px',
-    alignItems: 'center'
-  },
   search: {
     width: '320px',
+    maxWidth: '100%',
     padding: '12px 14px',
     borderRadius: '14px',
     border: '1px solid rgba(148, 163, 184, 0.18)',

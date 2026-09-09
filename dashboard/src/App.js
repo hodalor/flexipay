@@ -117,6 +117,7 @@ const styles = {
     minWidth: 0,
     overflowY: 'auto',
     overflowX: 'hidden',
+    scrollbarGutter: 'stable',
     padding: '14px 18px 18px'
   },
   contentInner: {

@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useBranding } from '@hooks/useBranding';
 
 export default function Topbar() {
-  const location = useLocation();
   const navigate = useNavigate();
   const profileRef = useRef(null);
   const user = window.localStorage.getItem('flexipay.dashboard.user');
   const parsedUser = user ? JSON.parse(user) : null;
   const name = parsedUser ? parsedUser.fullName : 'Operator';
   const role = parsedUser?.role ? String(parsedUser.role).replace(/_/g, ' ') : '';
-  const section = sectionTitle(location.pathname);
+  const { branding } = useBranding();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const initials = useMemo(() => {
     return name
@@ -45,9 +45,12 @@ export default function Topbar() {
 
   return (
     <header style={styles.header}>
-      <div>
+      <div style={styles.brandingWrap}>
         <div style={styles.kicker}>Operations Center</div>
-        <div style={styles.title}>{section}</div>
+        <div style={styles.brandRow}>
+          {branding.logoDataUrl ? <img src={branding.logoDataUrl} alt={branding.companyName} style={styles.logo} /> : null}
+          <div style={styles.title}>{branding.companyName || 'FlexiPay'}</div>
+        </div>
       </div>
       <div style={styles.rightRail}>
         <div style={styles.syncBadge}>Live sync active</div>
@@ -84,35 +87,6 @@ export default function Topbar() {
   );
 }
 
-function sectionTitle(pathname) {
-  if (pathname.startsWith('/customers')) {
-    return 'Customers';
-  }
-  if (pathname.startsWith('/devices')) {
-    return 'Devices';
-  }
-  if (pathname.startsWith('/loans')) {
-    return 'Loans';
-  }
-  if (pathname.startsWith('/repayments/recording')) {
-    return 'Repayment Recording';
-  }
-  if (pathname.startsWith('/repayments/approvals')) {
-    return 'Repayment Approvals';
-  }
-  if (pathname.startsWith('/payments')) {
-    return 'Repayments';
-  }
-  if (pathname.startsWith('/admin/users')) {
-    return 'Admin Users';
-  }
-  if (pathname.startsWith('/settings')) {
-    return 'Settings';
-  }
-
-  return 'Portfolio Control';
-}
-
 const styles = {
   header: {
     position: 'sticky',
@@ -134,10 +108,30 @@ const styles = {
     letterSpacing: '0.12em',
     fontWeight: '700'
   },
+  brandingWrap: {
+    display: 'grid',
+    gap: '4px'
+  },
+  brandRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    minWidth: 0
+  },
+  logo: {
+    width: '34px',
+    height: '34px',
+    objectFit: 'cover',
+    borderRadius: '10px',
+    border: '1px solid rgba(148, 163, 184, 0.16)'
+  },
   title: {
     fontSize: '22px',
     fontWeight: '700',
-    color: '#f8fafc'
+    color: '#f8fafc',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
   },
   rightRail: {
     display: 'flex',

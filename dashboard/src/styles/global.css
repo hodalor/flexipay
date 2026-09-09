@@ -20,4 +20,25 @@ body {
 
 * {
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(71, 85, 105, 0.95) rgba(2, 6, 23, 0.96);
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.96);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.95);
+  border-radius: 999px;
+  border: 2px solid rgba(2, 6, 23, 0.96);
+}
+
+*::-webkit-scrollbar-corner {
+  background: rgba(2, 6, 23, 0.96);
 }

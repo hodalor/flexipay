@@ -13,6 +13,7 @@ import { useLoans } from '@hooks/useLoans';
 import { hasAction } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
 import { metricGridStyle } from '@/styles/layout';
+import { useToast } from '@components/ToastProvider';
 
 function formatCurrency(value) {
   return 'ZMW ' + (Number(value || 0) / 100).toFixed(2);
@@ -20,6 +21,7 @@ function formatCurrency(value) {
 
 export default function Loans() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canCreateLoan = hasAction(user, 'loans.create');
   const canCancelLoan = hasAction(user, 'loans.cancel');
   const queryClient = useQueryClient();
@@ -29,7 +31,6 @@ export default function Loans() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pendingCancellation, setPendingCancellation] = useState(null);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [form, setForm] = useState({
     customerId: '',
     deviceId: '',
@@ -44,7 +45,6 @@ export default function Loans() {
   const mutation = useMutation({
     mutationFn: createLoan,
     onSuccess: () => {
-      setSuccess('Loan created successfully and is now available for repayment tracking.');
       setError('');
       setForm({
         customerId: '',
@@ -56,12 +56,23 @@ export default function Loans() {
         gracePeriodDays: '5',
         startDate: new Date().toISOString().slice(0, 10)
       });
+      setIsModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ['loans'] });
       queryClient.invalidateQueries({ queryKey: ['devices'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      showToast({
+        type: 'success',
+        title: 'Loan created',
+        message: 'The loan is now available for repayment tracking.'
+      });
     },
     onError: (requestError) => {
       setError(requestError.response?.data?.message || 'Unable to create loan.');
+      showToast({
+        type: 'error',
+        title: 'Create loan failed',
+        message: requestError.response?.data?.message || 'Unable to create loan.'
+      });
     }
   });
 
@@ -72,6 +83,18 @@ export default function Loans() {
       queryClient.invalidateQueries({ queryKey: ['loans'] });
       queryClient.invalidateQueries({ queryKey: ['devices'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+      showToast({
+        type: 'success',
+        title: 'Loan cancelled',
+        message: 'The device is now free for a new assignment.'
+      });
+    },
+    onError: (requestError) => {
+      showToast({
+        type: 'error',
+        title: 'Cancel loan failed',
+        message: requestError.response?.data?.message || 'Unable to cancel the loan.'
+      });
     }
   });
 
@@ -133,7 +156,6 @@ export default function Loans() {
 
   function handleCreateLoan() {
     setError('');
-    setSuccess('');
 
     if (!form.customerId || !form.deviceId || !form.principalAmount || !form.interestRate || !form.termMonths) {
       setError('Customer, device, principal amount, interest rate, and term are required.');
@@ -159,7 +181,6 @@ export default function Loans() {
         actionLabel={canCreateLoan ? 'Create loan' : null}
         onAction={canCreateLoan ? () => {
           setError('');
-          setSuccess('');
           setIsModalOpen(true);
         } : undefined}
       />
@@ -210,8 +231,11 @@ export default function Loans() {
         submitLabel="Create loan"
         loading={mutation.isPending}
         error={error}
-        success={success}
-        onClose={() => setIsModalOpen(false)}
+        success=""
+        onClose={() => {
+          setIsModalOpen(false);
+          setError('');
+        }}
         onSubmit={handleCreateLoan}
       >
         <div style={modalFormStyles.grid}>

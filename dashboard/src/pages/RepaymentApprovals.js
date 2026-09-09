@@ -8,6 +8,7 @@ import { getPayments, submitDirectorReview, submitManagerReview } from '@api';
 import { hasAction } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
 import { metricGridStyle } from '@/styles/layout';
+import { useToast } from '@components/ToastProvider';
 
 function formatCurrency(value) {
   return 'ZMW ' + (Number(value || 0) / 100).toFixed(2);
@@ -15,6 +16,7 @@ function formatCurrency(value) {
 
 export default function RepaymentApprovals() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canDirectorApprove = hasAction(user, 'repayments.approve_director');
   const canManagerApprove = hasAction(user, 'repayments.approve_manager');
   const [activeTab, setActiveTab] = useState(canDirectorApprove ? 'director' : canManagerApprove ? 'manager' : 'completed');
@@ -48,6 +50,18 @@ export default function RepaymentApprovals() {
       queryClient.invalidateQueries({ queryKey: ['loans'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['devices'] });
+      showToast({
+        type: 'success',
+        title: decision === 'approve' ? 'Repayment approved' : 'Repayment rejected',
+        message: 'The approval queue has been updated.'
+      });
+    },
+    onError: (error) => {
+      showToast({
+        type: 'error',
+        title: 'Review failed',
+        message: error.response?.data?.message || error.message || 'Unable to submit the repayment review.'
+      });
     }
   });
 

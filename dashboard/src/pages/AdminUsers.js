@@ -16,6 +16,7 @@ import {
 } from '@/constants/access';
 import { useAuth } from '@hooks/useAuth';
 import { metricGridStyle } from '@/styles/layout';
+import { useToast } from '@components/ToastProvider';
 
 function emptyForm() {
   return {
@@ -32,6 +33,7 @@ function emptyForm() {
 
 export default function AdminUsers() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const canViewUser = hasAction(user, 'admin_users.view');
   const canCreateUser = hasAction(user, 'admin_users.create');
   const canUpdateUser = hasAction(user, 'admin_users.update');
@@ -44,7 +46,6 @@ export default function AdminUsers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState('');
 
   const mutation = useMutation({
     mutationFn: function saveUser(payload) {
@@ -55,17 +56,23 @@ export default function AdminUsers() {
       return createAdminUser(payload);
     },
     onSuccess: () => {
-      setFormSuccess(form.id ? 'Admin user updated successfully.' : 'Admin user created successfully.');
       setFormError('');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setForm(emptyForm());
-        setFormSuccess('');
-      }, 300);
+      setIsModalOpen(false);
+      setForm(emptyForm());
+      showToast({
+        type: 'success',
+        title: form.id ? 'User updated' : 'User created',
+        message: form.id ? 'Admin user details were saved successfully.' : 'The new admin user is ready to sign in.'
+      });
     },
     onError: (error) => {
       setFormError(error.response?.data?.message || 'Unable to save admin user.');
+      showToast({
+        type: 'error',
+        title: 'Save failed',
+        message: error.response?.data?.message || 'Unable to save admin user.'
+      });
     }
   });
 
@@ -95,7 +102,6 @@ export default function AdminUsers() {
   function openCreateModal() {
     setForm(emptyForm());
     setFormError('');
-    setFormSuccess('');
     setIsModalOpen(true);
   }
 
@@ -111,7 +117,6 @@ export default function AdminUsers() {
       actions: row.raw.permissions?.actions || []
     });
     setFormError('');
-    setFormSuccess('');
     setIsModalOpen(true);
   }
 
@@ -147,7 +152,6 @@ export default function AdminUsers() {
 
   function handleSubmit() {
     setFormError('');
-    setFormSuccess('');
 
     if (!form.fullName || !form.email || !form.role) {
       setFormError('Full name, email, and role are required.');
@@ -226,12 +230,11 @@ export default function AdminUsers() {
         submitLabel={form.id ? 'Save changes' : 'Create user'}
         loading={mutation.isPending}
         error={formError}
-        success={formSuccess}
+        success=""
         onClose={() => {
           setIsModalOpen(false);
           setForm(emptyForm());
           setFormError('');
-          setFormSuccess('');
         }}
         onSubmit={handleSubmit}
       >
